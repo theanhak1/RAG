@@ -23,7 +23,7 @@ app.add_middleware(
 # 2. CẤU HÌNH BIẾN MÔI TRƯỜNG (Trên Cloud sẽ cấu hình trong Dashboard)
 GOOGLE_API_KEY = os.getenv("AIzaSyDDdowRQI0HUqmI7LHLk5a45bFNOJiFlmU")
 # URL kết nối Postgres (Ví dụ: postgresql+psycopg2://user:pass@host:port/dbname)
-DB_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:111789@localhost:5433/postgres")
+DB_URL = "postgresql://postgres:[Phamtheanh2901]@db.eolyawcnjbhxmkeseotw.supabase.co:5432/postgres"
 COLLECTION_NAME = "nong_nghiep_phat_trien"
 
 # 3. KHỞI TẠO CÁC THÀNH PHẦN AI
@@ -31,10 +31,12 @@ embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L1
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.1)
 
 # Kết nối tới Vector Store hiện có trong Postgres
+# Cập nhật trong main.py
 vector_db = PGVector(
     connection_string=DB_URL,
     embedding_function=embeddings,
-    collection_name=COLLECTION_NAME
+    collection_name="nong_nghiep_chuyen_nghiep",
+    use_jsonb=True # Thêm dòng này để hết cảnh báo và chạy nhanh hơn
 )
 
 retriever = vector_db.as_retriever(search_kwargs={"k": 5})
