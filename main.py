@@ -23,7 +23,7 @@ app.add_middleware(
 # 2. CẤU HÌNH BIẾN MÔI TRƯỜNG (Trên Cloud sẽ cấu hình trong Dashboard)
 GOOGLE_API_KEY = os.getenv("AIzaSyDDdowRQI0HUqmI7LHLk5a45bFNOJiFlmU")
 # URL kết nối Postgres (Ví dụ: postgresql+psycopg2://user:pass@host:port/dbname)
-DB_URL = "postgresql://postgres:[Phamtheanh2901]@db.eolyawcnjbhxmkeseotw.supabase.co:5432/postgres"
+DB_URL = "postgresql://postgres:Phamtheanh290]@db.eolyawcnjbhxmkeseotw.supabase.co:5432/postgres"
 COLLECTION_NAME = "nong_nghiep_phat_trien"
 
 # 3. KHỞI TẠO CÁC THÀNH PHẦN AI
