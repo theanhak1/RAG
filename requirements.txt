@@ -1,8 +1,9 @@
+langchain-google-genai
+langchain-community
+langchain-core
+langchain-postgres
 fastapi
 uvicorn
+pydantic
 psycopg2-binary
 sentence-transformers
-python-docx
-langchain
-openai
-python-dotenv
