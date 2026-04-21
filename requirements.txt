@@ -6,4 +6,3 @@ fastapi
 uvicorn
 pydantic
 psycopg2-binary
-sentence-transformers
