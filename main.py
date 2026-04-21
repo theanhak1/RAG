@@ -12,7 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 # 1. KHỞI TẠO FASTAPI
 app = FastAPI(title="Agri-AI API Service")
 
-# Cấu hình CORS để Mobile App hoặc Web có thể gọi tới mà không bị chặn
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,31 +19,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. CẤU HÌNH BIẾN MÔI TRƯỜNG (Trên Cloud sẽ cấu hình trong Dashboard)
-GOOGLE_API_KEY = os.getenv("AIzaSyDDdowRQI0HUqmI7LHLk5a45bFNOJiFlmU")
-# URL kết nối Postgres (Ví dụ: postgresql+psycopg2://user:pass@host:port/dbname)
-DB_URL = "postgresql://postgres:Phamtheanh290@db.eolyawcnjbhxmkeseotw.supabase.co:5432/postgres"
-COLLECTION_NAME = "nong_nghiep_phat_trien"
+# 2. LẤY BIẾN MÔI TRƯỜNG TỪ RENDER
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+DB_URL = os.getenv("DATABASE_URL")
+COLLECTION_NAME = "nong_nghiep_chuyen_nghiep"
+
+# Kiểm tra nếu thiếu biến môi trường
+if not GOOGLE_API_KEY or not DB_URL:
+    print("❌ Lỗi: Thiếu biến môi trường GOOGLE_API_KEY hoặc DATABASE_URL")
 
 # 3. KHỞI TẠO CÁC THÀNH PHẦN AI
+# Sử dụng model embedding nhẹ để tránh lỗi RAM trên Render Free
 embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.1)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY, temperature=0.1)
 
-# Kết nối tới Vector Store hiện có trong Postgres
-# Cập nhật trong main.py
 vector_db = PGVector(
     connection_string=DB_URL,
     embedding_function=embeddings,
-    collection_name="nong_nghiep_chuyen_nghiep",
-    use_jsonb=True # Thêm dòng này để hết cảnh báo và chạy nhanh hơn
+    collection_name=COLLECTION_NAME,
+    use_jsonb=True
 )
 
 retriever = vector_db.as_retriever(search_kwargs={"k": 5})
 
-# Prompt chuyên gia linh hoạt
 template = """Bạn là chuyên gia nông nghiệp. Dựa vào tài liệu, hãy trả lời câu hỏi của nông dân.
-CHỈ trả lời những phần được hỏi (Dấu hiệu, Nguyên nhân hoặc Cách điều trị).
-Nếu hỏi chung, trả lời đầy đủ. Nếu không có thông tin, hãy báo chưa có dữ liệu.
+CHỈ trả lời những phần được hỏi. Nếu không có thông tin, hãy báo chưa có dữ liệu.
 
 TÀI LIỆU: {context}
 CÂU HỎI: {question}
@@ -61,7 +60,6 @@ rag_chain = (
     | prompt | llm | StrOutputParser()
 )
 
-# 4. ĐỊNH NGHĨA ENDPOINT CHO MOBILE APP
 class ChatRequest(BaseModel):
     message: str
 
@@ -78,8 +76,5 @@ async def ask_ai(request: ChatRequest):
         answer = rag_chain.invoke(request.message)
         return {"status": "success", "answer": answer}
     except Exception as e:
+        print(f"Error: {str(e)}") # Log lỗi ra console để debug trên Render
         raise HTTPException(status_code=500, detail=str(e))
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
